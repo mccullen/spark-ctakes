@@ -27,6 +27,7 @@ import org.codehaus.janino.Java;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SparkMain {
@@ -43,17 +44,27 @@ public class SparkMain {
             // in spark-submit
             builder.master(config.getMaster());
         }
+        String driverLoc = "C:\\root\\vdt\\icapa\\nlp\\apache-ctakes-4.0.0.1\\lib\\mssql-jdbc-9.2.1.jre8.jar";
         SparkSession sparkSession = builder
             .config(sparkConf)
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
              // Use this if you need to register all Kryo required classes.
              // If it is false, you do not need register any class for Kryo, but it will increase your data size when the data is serializing.
             .config("spark.kryo.registrationRequired", "true")
+            .config("spark.executor.extraClassPath", driverLoc)
+            .config("spark.driver.extraClassPath", driverLoc)
+            .config("spark.jars", driverLoc)
             .getOrCreate();
         JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
         try {
-            Class<?> clazz = Class.forName(config.getDocumentLoader());
-            AbstractDocumentLoader documentLoader = (AbstractDocumentLoader)clazz.getConstructor().newInstance();
+            String documentLoaderLine = config.getDocumentLoader();
+            String[] splitLine = documentLoaderLine.split(" ", 2);
+            String documentLoaderName = splitLine[0];
+            String[] params = splitLine[1].split(" \u0001 ");
+            Class[] classes = new Class[params.length];
+            Arrays.fill(classes, String.class);
+            Class<?> clazz = Class.forName(documentLoaderName);
+            AbstractDocumentLoader documentLoader = (AbstractDocumentLoader)clazz.getConstructor(classes).newInstance(params);
             documentLoader.init(sparkSession, javaSparkContext);
             Dataset<Document> documentDataset = documentLoader.getDocuments();
             // Use broadcast so kryo serialization is used

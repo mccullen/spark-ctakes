@@ -10,9 +10,15 @@ import org.apache.spark.sql.Row;
 import java.util.List;
 
 public class StressTestDocumentLoader extends AbstractDocumentLoader {
+    private int _nDocuments;
+
+    public StressTestDocumentLoader(String nDocuments) {
+        _nDocuments = Integer.parseInt(nDocuments);
+    }
+
     @Override
     public Dataset<Document> getDocuments() {
-        List<Document> testDocs = Util.getTestDocuments(100);
+        List<Document> testDocs = Util.getTestDocuments(_nDocuments);
         JavaRDD<Document> testDocsRDD = getJavaSparkContext().parallelize(testDocs);
         Dataset<Row> dataset = getSparkSession().createDataFrame(testDocsRDD, Document.class);
         Dataset<Document> result = dataset.as(Encoders.bean(Document.class));
