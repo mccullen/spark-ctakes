@@ -9,9 +9,9 @@ public abstract class AbstractDocumentLoader {
     private SparkSession _sparkSession;
     private JavaSparkContext _javaSparkContext;
 
-    public void init(SparkSession sparkSession) {
+    public void init(SparkSession sparkSession, JavaSparkContext javaSparkContext) {
         _sparkSession = sparkSession;
-        _javaSparkContext = JavaSparkContext.fromSparkContext(_sparkSession.sparkContext());
+        _javaSparkContext = javaSparkContext;
     }
 
     public abstract Dataset<Document> getDocuments();

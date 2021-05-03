@@ -1,5 +1,12 @@
 package icapa.spark.models;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
+import java.io.Serializable;
+
 public class ConfigurationSettings {
     private String umlsKey;
     private String documentLoader;

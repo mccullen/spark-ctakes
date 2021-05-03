@@ -9,14 +9,20 @@ import icapa.spark.models.Document;
 import org.apache.ctakes.core.pipeline.PipelineBuilder;
 import org.apache.ctakes.core.pipeline.PiperFileReader;
 import org.apache.ctakes.dictionary.lookup2.util.UmlsUserApprover;
+import org.apache.ctakes.typesystem.type.structured.DocumentID;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
+import org.codehaus.janino.Java;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,7 +34,8 @@ public class SparkMain {
         ConfigurationSettings config = Util.getConfigurationSettings();
         SparkConf sparkConf = new SparkConf()
             .registerKryoClasses(new Class<?>[]{
-                Document.class
+                Document.class,
+                ConfigurationSettings.class
             });
         SparkSession.Builder builder = SparkSession.builder();
         if (config.getMaster() != null) {
@@ -43,30 +50,36 @@ public class SparkMain {
              // If it is false, you do not need register any class for Kryo, but it will increase your data size when the data is serializing.
             .config("spark.kryo.registrationRequired", "true")
             .getOrCreate();
+        JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
         try {
             Class<?> clazz = Class.forName(config.getDocumentLoader());
             AbstractDocumentLoader documentLoader = (AbstractDocumentLoader)clazz.getConstructor().newInstance();
-            documentLoader.init(sparkSession);
+            documentLoader.init(sparkSession, javaSparkContext);
             Dataset<Document> documentDataset = documentLoader.getDocuments();
+            // Use broadcast so kryo serialization is used
+            Broadcast<ConfigurationSettings> broadcastConfig = javaSparkContext.broadcast(config);
             documentDataset.foreachPartition(documents -> {
-                //System.setProperty(UmlsUserApprover.KEY_PARAM, config.getUmlsKey());
-                /*
-                _jCas = JCasFactory.createJCas();
+                System.setProperty(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
+                JCas jCas = JCasFactory.createJCas();
                 PiperFileReader piperFileReader = new PiperFileReader();
-                String ctakesHome = System.getenv("CTAKES_HOME");
-                Path path = Paths.get(ctakesHome, "resources/org/apache/ctakes/clinical/pipeline/DefaultFastPipeline.piper");
-                String location = path.toString();
-                piperFileReader.loadPipelineFile(location);
+                piperFileReader.loadPipelineFile(broadcastConfig.value().getPiperFile());
                 PipelineBuilder pipelineBuilder = piperFileReader.getBuilder();
-                pipelineBuilder.set(UmlsUserApprover.KEY_PARAM, Util.getConfigProperty("umls.key"));
+                pipelineBuilder.set(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
                 pipelineBuilder.build();
-                _aed = pipelineBuilder.getAnalysisEngineDesc();
-                _aae = AnalysisEngineFactory.createEngine(_aed);
-                 */
-                System.out.println();
+                AnalysisEngineDescription analysisEngineDescription = pipelineBuilder.getAnalysisEngineDesc();
+                AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);
+                while (documents.hasNext()) {
+                    Document document = documents.next();
+                    DocumentID documentID = new DocumentID(jCas);
+                    documentID.setDocumentID(document.getDocumentId());
+                    documentID.addToIndexes();
+                    jCas.setDocumentText(document.getText());
+                    analysisEngine.process(jCas);
+                    jCas.reset();
+                }
             });
-            System.out.println(documentLoader);
-            documentDataset.collect();
+            //System.out.println(documentLoader);
+            //documentDataset.collect();
         } catch (Exception e) {
         }
 

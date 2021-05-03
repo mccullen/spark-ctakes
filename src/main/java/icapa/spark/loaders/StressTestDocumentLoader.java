@@ -14,7 +14,7 @@ public class StressTestDocumentLoader extends AbstractDocumentLoader {
     public Dataset<Document> getDocuments() {
         List<Document> testDocs = Util.getTestDocuments(100);
         JavaRDD<Document> testDocsRDD = getJavaSparkContext().parallelize(testDocs);
-        Dataset<Row> dataset = getSparkSession().createDataFrame(testDocsRDD, Document.class);//.createDataset(testDocsRDD, Encoders.bean(Document.class));
+        Dataset<Row> dataset = getSparkSession().createDataFrame(testDocsRDD, Document.class);
         Dataset<Document> result = dataset.as(Encoders.bean(Document.class));
         return result;
     }
