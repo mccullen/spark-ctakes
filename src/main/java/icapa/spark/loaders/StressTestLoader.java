@@ -9,10 +9,10 @@ import org.apache.spark.sql.Row;
 
 import java.util.List;
 
-public class StressTestDocumentLoader extends AbstractDocumentLoader {
+public class StressTestLoader extends AbstractLoader {
     private int _nDocuments;
 
-    public StressTestDocumentLoader(String nDocuments) {
+    public StressTestLoader(String nDocuments) {
         _nDocuments = Integer.parseInt(nDocuments);
     }
 

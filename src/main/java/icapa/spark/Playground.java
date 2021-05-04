@@ -19,8 +19,8 @@ import java.util.List;
 
 public class Playground {
     public static void main(String[] args) throws Exception {
-        String s = "hello there \u0001 world";
-        String[] result = s.split(" \u0001 ");
+        String s = "hello there world";
+        String[] result = s.split("\u0001");
         System.out.println(result);
     }
 }

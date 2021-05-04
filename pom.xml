@@ -196,12 +196,12 @@ the License.
                 </exclusion>
             </exclusions>
         </dependency>
+        <!--
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>spark-mssql-connector_2.12_3.0</artifactId>
             <version>1.0.0-alpha</version>
         </dependency>
-        <!--
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>spark-mssql-connector_2.11_2.4</artifactId>

@@ -5,7 +5,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 
-public abstract class AbstractDocumentLoader {
+public abstract class AbstractLoader {
     private SparkSession _sparkSession;
     private JavaSparkContext _javaSparkContext;
 

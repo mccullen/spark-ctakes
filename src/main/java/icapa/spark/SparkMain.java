@@ -1,9 +1,6 @@
 package icapa.spark;
 
-import icapa.spark.functions.MapFunction;
-import icapa.spark.functions.PipelineFunction;
-import icapa.spark.functions.PipelineMap;
-import icapa.spark.loaders.AbstractDocumentLoader;
+import icapa.spark.loaders.AbstractLoader;
 import icapa.spark.models.ConfigurationSettings;
 import icapa.spark.models.Document;
 import org.apache.ctakes.core.pipeline.PipelineBuilder;
@@ -11,11 +8,9 @@ import org.apache.ctakes.core.pipeline.PiperFileReader;
 import org.apache.ctakes.dictionary.lookup2.util.UmlsUserApprover;
 import org.apache.ctakes.typesystem.type.structured.DocumentID;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.execution.datasources.orc.OrcFileFormat;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -23,13 +18,8 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.codehaus.janino.Java;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class SparkMain {
     public static void main(String[] args) {
@@ -64,11 +54,11 @@ public class SparkMain {
             String documentLoaderLine = config.getDocumentLoader();
             String[] splitLine = documentLoaderLine.split(" ", 2);
             String documentLoaderName = splitLine[0];
-            String[] params = splitLine[1].split(" \u0001 ");
+            String[] params = splitLine[1].split("\u0001");
             Class[] classes = new Class[params.length];
             Arrays.fill(classes, String.class);
             Class<?> clazz = Class.forName(documentLoaderName);
-            AbstractDocumentLoader documentLoader = (AbstractDocumentLoader)clazz.getConstructor(classes).newInstance(params);
+            AbstractLoader documentLoader = (AbstractLoader)clazz.getConstructor(classes).newInstance(params);
             documentLoader.init(sparkSession, javaSparkContext);
             Dataset<Document> documentDataset = documentLoader.getDocuments();
             // Use broadcast so kryo serialization is used
