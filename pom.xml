@@ -26,6 +26,9 @@ the License.
       A serializableClass to run ctakes at high-speed
     </description>
     <properties>
+        <ctakes.version>4.0.0.1</ctakes.version>
+        <!--<spark.version>3.1.1</spark.version>-->
+        <spark.version>3.1.1</spark.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -123,62 +126,43 @@ the License.
         </plugins>
      </build>
     <dependencies>
-        <!--
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>2.11.7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.11</artifactId>
-        <version>1.4.1</version>
-      </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming_2.11</artifactId>
-            <version>1.4.1</version>
-        </dependency>
-        -->
-        <!-- https://mvnrepository.com/artifact/org.scala-lang/scala-library -->
-        <!--
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.13.5</version>
+            <version>2.12.10</version>
         </dependency>
-        -->
-        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
+
+        <!-- Spark -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.12</artifactId>
-            <version>3.1.1</version>
+            <version>${spark.version}</version>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
-            <version>3.1.1</version>
+            <version>${spark.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming_2.12</artifactId>
-            <version>3.1.1</version>
+            <version>${spark.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/it.cnr.iac/ctakes-clinical-pipeline -->
+        <!--
         <dependency>
             <groupId>it.cnr.iac</groupId>
             <artifactId>ctakes-clinical-pipeline</artifactId>
             <version>0.0.2</version>
         </dependency>
+        -->
 
+        <!-- Ctakes -->
         <dependency>
             <groupId>org.apache.ctakes</groupId>
             <artifactId>ctakes-core</artifactId>
-            <version>4.0.0.1</version>
+            <version>${ctakes.version}</version>
             <!-- Exclude from jar-with-dependencies because it is already in CTAKES_HOME/lib -->
             <exclusions>
                 <exclusion>
@@ -190,7 +174,7 @@ the License.
         <dependency>
             <groupId>org.apache.ctakes</groupId>
             <artifactId>ctakes-clinical-pipeline</artifactId>
-            <version>4.0.0.1</version>
+            <version>${ctakes.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
@@ -201,7 +185,7 @@ the License.
         <dependency>
             <groupId>org.apache.ctakes</groupId>
             <artifactId>ctakes-coreference</artifactId>
-            <version>4.0.0.1</version>
+            <version>${ctakes.version}</version>
             <!-- Exclude dependency from jar-with-dependencies since CTAKES_HOME/lib already has this -->
             <!-- TODO: I commented this out since it stopped working when running from intellij. Not sure why exactly -->
             <!--<scope>provided</scope>-->
@@ -212,6 +196,30 @@ the License.
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>spark-mssql-connector_2.12_3.0</artifactId>
+            <version>1.0.0-alpha</version>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>spark-mssql-connector_2.11_2.4</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        -->
+        <!--
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>8.4.1.jre8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>9.2.1.jre8</version>
+        </dependency>
+        -->
 
     </dependencies>
 </project>

@@ -9,10 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.spark.sql.SparkSession;
+import scala.collection.mutable.WrappedArray;
 
 public class StressTestMain {
     public static void main(String[] args) throws Exception {
-        int nDocuments = 10000;
+        int nDocuments = 10;
         if (args.length == 1) {
             nDocuments = Integer.parseInt(args[0]);
             System.out.println("N docs: ");
@@ -20,6 +21,8 @@ public class StressTestMain {
         }
         SparkConf sparkConf = new SparkConf()
             .registerKryoClasses(new Class<?>[]{
+                WrappedArray.ofRef.class,
+                Object[].class
             });
         SparkSession ss = SparkSession.builder()
             .appName("app")

@@ -17,6 +17,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.execution.datasources.orc.OrcFileFormat;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
@@ -32,8 +33,10 @@ import java.util.List;
 
 public class SparkMain {
     public static void main(String[] args) {
+        OrcFileFormat orc = new OrcFileFormat();
         ConfigurationSettings config = Util.getConfigurationSettings();
-        SparkConf sparkConf = new SparkConf()
+        SparkConf sparkConf = new SparkConf();
+        sparkConf
             .registerKryoClasses(new Class<?>[]{
                 Document.class,
                 ConfigurationSettings.class
@@ -44,7 +47,8 @@ public class SparkMain {
             // in spark-submit
             builder.master(config.getMaster());
         }
-        String driverLoc = "C:\\root\\vdt\\icapa\\nlp\\apache-ctakes-4.0.0.1\\lib\\mssql-jdbc-9.2.1.jre8.jar";
+        //String driverLoc = "C:\\root\\vdt\\icapa\\nlp\\apache-ctakes-4.0.0.1\\lib\\mssql-jdbc-9.2.1.jre8.jar";
+        String driverLoc = "C:/root/vdt/icapa/nlp/apache-ctakes-4.0.0.1/lib/mssql-jdbc-9.2.1.jre8.jar";
         SparkSession sparkSession = builder
             .config(sparkConf)
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -92,6 +96,7 @@ public class SparkMain {
             //System.out.println(documentLoader);
             //documentDataset.collect();
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         sparkSession.stop();
