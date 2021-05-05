@@ -12,6 +12,15 @@ public class ConfigurationSettings {
     private String documentLoader;
     private String piperFile;
     private String master;
+    private String lookupXml;
+
+    public String getLookupXml() {
+        return lookupXml;
+    }
+
+    public void setLookupXml(String lookupXml) {
+        this.lookupXml = lookupXml;
+    }
 
     public String getMaster() {
         return master;

@@ -1,8 +1,11 @@
 package icapa.spark;
 
+import com.lexicalscope.jewel.cli.CliFactory;
 import icapa.spark.loaders.AbstractLoader;
 import icapa.spark.models.ConfigurationSettings;
 import icapa.spark.models.Document;
+import org.apache.ctakes.core.config.ConfigParameterConstants;
+import org.apache.ctakes.core.pipeline.CliOptionals;
 import org.apache.ctakes.core.pipeline.PipelineBuilder;
 import org.apache.ctakes.core.pipeline.PiperFileReader;
 import org.apache.ctakes.dictionary.lookup2.util.UmlsUserApprover;
@@ -37,7 +40,6 @@ public class SparkMain {
             // in spark-submit
             builder.master(config.getMaster());
         }
-        //String driverLoc = "C:\\root\\vdt\\icapa\\nlp\\apache-ctakes-4.0.0.1\\lib\\mssql-jdbc-9.2.1.jre8.jar";
         String driverLoc = "C:/root/vdt/icapa/nlp/apache-ctakes-4.0.0.1/lib/mssql-jdbc-9.2.1.jre8.jar";
         SparkSession sparkSession = builder
             .config(sparkConf)
@@ -49,7 +51,10 @@ public class SparkMain {
             .config("spark.driver.extraClassPath", driverLoc)
             .config("spark.jars", driverLoc)
             .getOrCreate();
+
         JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
+        javaSparkContext.addFile(driverLoc);
+        javaSparkContext.addJar(driverLoc);
         try {
             String documentLoaderLine = config.getDocumentLoader();
             String[] splitLine = documentLoaderLine.split(" ", 2);
@@ -67,9 +72,18 @@ public class SparkMain {
                 System.setProperty(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
                 JCas jCas = JCasFactory.createJCas();
                 PiperFileReader piperFileReader = new PiperFileReader();
+                String[] optionsArgs = {
+                    "--key", broadcastConfig.value().getUmlsKey(),
+                    "-p", broadcastConfig.value().getPiperFile(),
+                    "-l", broadcastConfig.value().getLookupXml()
+                };
+                CliOptionals options = CliFactory.parseArguments(CliOptionals.class, optionsArgs);
                 piperFileReader.loadPipelineFile(broadcastConfig.value().getPiperFile());
+                piperFileReader.setCliOptionals(options);
                 PipelineBuilder pipelineBuilder = piperFileReader.getBuilder();
                 pipelineBuilder.set(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
+                pipelineBuilder.set(ConfigParameterConstants.PARAM_LOOKUP_XML, options.getLookupXml());
+
                 pipelineBuilder.build();
                 AnalysisEngineDescription analysisEngineDescription = pipelineBuilder.getAnalysisEngineDesc();
                 AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);

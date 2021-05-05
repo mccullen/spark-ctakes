@@ -61,6 +61,7 @@ public class Util {
             configurationSettings.setPiperFile(props.getProperty("piper.file"));
             configurationSettings.setDocumentLoader(props.getProperty("document.loader"));
             configurationSettings.setMaster(props.getProperty("master"));
+            configurationSettings.setLookupXml(props.getProperty("lookup.xml"));
         } catch (IOException ex) {
             LOGGER.error("Error loading configuration settings", ex);
         }
