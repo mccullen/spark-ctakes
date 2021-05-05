@@ -16,6 +16,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.execution.datasources.orc.OrcFileFormat;
+import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
@@ -26,7 +27,6 @@ import java.util.Arrays;
 
 public class SparkMain {
     public static void main(String[] args) {
-        OrcFileFormat orc = new OrcFileFormat();
         ConfigurationSettings config = Util.getConfigurationSettings();
         SparkConf sparkConf = new SparkConf();
         sparkConf
@@ -47,6 +47,7 @@ public class SparkMain {
              // Use this if you need to register all Kryo required classes.
              // If it is false, you do not need register any class for Kryo, but it will increase your data size when the data is serializing.
             .config("spark.kryo.registrationRequired", "true")
+            // Not sure this will do much here. Apparantely this only works from spark-submit
             .config("spark.executor.extraClassPath", driverLoc)
             .config("spark.driver.extraClassPath", driverLoc)
             .config("spark.jars", driverLoc)
@@ -72,18 +73,11 @@ public class SparkMain {
                 System.setProperty(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
                 JCas jCas = JCasFactory.createJCas();
                 PiperFileReader piperFileReader = new PiperFileReader();
-                String[] optionsArgs = {
-                    "--key", broadcastConfig.value().getUmlsKey(),
-                    "-p", broadcastConfig.value().getPiperFile(),
-                    "-l", broadcastConfig.value().getLookupXml()
-                };
-                CliOptionals options = CliFactory.parseArguments(CliOptionals.class, optionsArgs);
-                piperFileReader.loadPipelineFile(broadcastConfig.value().getPiperFile());
-                piperFileReader.setCliOptionals(options);
                 PipelineBuilder pipelineBuilder = piperFileReader.getBuilder();
+                // Order of methods is important here: set -> load -> build
                 pipelineBuilder.set(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
-                pipelineBuilder.set(ConfigParameterConstants.PARAM_LOOKUP_XML, options.getLookupXml());
-
+                pipelineBuilder.set(ConfigParameterConstants.PARAM_LOOKUP_XML, broadcastConfig.value().getLookupXml());
+                piperFileReader.loadPipelineFile(broadcastConfig.value().getPiperFile());
                 pipelineBuilder.build();
                 AnalysisEngineDescription analysisEngineDescription = pipelineBuilder.getAnalysisEngineDesc();
                 AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);
