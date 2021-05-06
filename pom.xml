@@ -27,7 +27,6 @@ the License.
     </description>
     <properties>
         <ctakes.version>4.0.0.1</ctakes.version>
-        <!--<spark.version>3.1.1</spark.version>-->
         <spark.version>3.1.1</spark.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -36,45 +35,30 @@ the License.
         <directory>target</directory>
         <outputDirectory>target/classes</outputDirectory>
         <finalName>${project.artifactId}-${project.version}</finalName>
-        <!--sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-        <testSourceDirectory>${basedir}/src/serializableClass/java</testSourceDirectory -->
         <plugins>
+            <!-- Compile using java 8 -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                  <archive>
-                    <manifest>
-                      <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                      <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                    </manifest>
-                    <index>true</index>
-                  </archive>
-                </configuration>
-            </plugin>
+            <!-- Creates jar file and DOES include dependencies -->
+            <!-- Prefabricated descriptor. jar w/ dependencies will package all dependencies together -->
+            <!--
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-assembly-plugin</artifactId>
               <version>2.5.4</version>
               <configuration>
-                  <descriptorRefs>
-                      <descriptorRef>jar-with-dependencies</descriptorRef>
-                  </descriptorRefs>
-                <descriptors>
-                  <descriptor>src/main/assembly/assembly.xml</descriptor>
-                  <descriptor>src/main/assembly/hadoop-job.xml</descriptor>
-                </descriptors>
+                <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
                 <archive>
                   <manifest>
-                    <mainClass>icapa.spark.StreamingMain</mainClass>
+                    <mainClass>icapa.spark.SparkMain</mainClass>
                   </manifest>
                 </archive>
               </configuration>
@@ -88,6 +72,31 @@ the License.
                 </execution>
               </executions>
             </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*config*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Execute unit tests -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.17</version>
@@ -97,9 +106,20 @@ the License.
                     </includes>
                 </configuration>
             </plugin>
+            <!-- Javadocs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.7.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.0.0</version>
+            </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9</version>
+                <version>3.2.0</version>
                 <configuration>
                     <charset>UTF-8</charset>
                     <docencoding>UTF-8</docencoding>
@@ -108,20 +128,12 @@ the License.
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
-                        <phase>package</phase>
+                        <phase>site</phase>
                         <goals>
                             <goal>javadoc</goal>
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
             </plugin>
         </plugins>
      </build>
@@ -148,15 +160,6 @@ the License.
             <artifactId>spark-streaming_2.12</artifactId>
             <version>${spark.version}</version>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/it.cnr.iac/ctakes-clinical-pipeline -->
-        <!--
-        <dependency>
-            <groupId>it.cnr.iac</groupId>
-            <artifactId>ctakes-clinical-pipeline</artifactId>
-            <version>0.0.2</version>
-        </dependency>
-        -->
 
         <!-- Ctakes -->
         <dependency>
@@ -196,30 +199,5 @@ the License.
                 </exclusion>
             </exclusions>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>spark-mssql-connector_2.12_3.0</artifactId>
-            <version>1.0.0-alpha</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>spark-mssql-connector_2.11_2.4</artifactId>
-            <version>1.0.2</version>
-        </dependency>
-        -->
-        <!--
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <version>8.4.1.jre8</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <version>9.2.1.jre8</version>
-        </dependency>
-        -->
-
     </dependencies>
 </project>

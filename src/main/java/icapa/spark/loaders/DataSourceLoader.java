@@ -20,7 +20,6 @@ public class DataSourceLoader extends AbstractLoader {
             if (s.startsWith(FORMAT)) {
                 _format = s.replaceFirst(FORMAT, ""); // There should only be one format
             } else if (s.startsWith(OPTIONS)) {
-                // optionsSplit[0] will just be
                 String optionsLine = s.replaceFirst(OPTIONS, "");
                 _options = optionsLine.split(INNER_DELIMITER);
             } else if (s.startsWith(LOADS)) {
@@ -41,19 +40,6 @@ public class DataSourceLoader extends AbstractLoader {
             dataFrameReader.option(key, value);
         }
         Dataset<Row> dataset = _loads != null && _loads.length > 0 ? dataFrameReader.load(_loads) : dataFrameReader.load();
-        /*
-        Dataset<Row> dataset = sparkSession.read()
-            .format("jdbc")
-            //.format("com.microsoft.sqlserver.jdbc.spark")
-            .option("url", "jdbc:sqlserver://localhost;databaseName=playground;integratedSecurity=true;")
-            //.option("query", "SELECT note_id AS documentId, note AS text FROM playground.dbo.note")
-            .option("query", "SELECT note_id AS documentId, note AS text, patient_id FROM playground.dbo.note")
-            //.option("dbtable", "note")
-            .option("driver", "com.microsoft.sqlserver.jdbc.SQLServerDriver")
-            .load();
-         */
-        //Dataset<Row> dataset = sparkSession.sql("SELECT...");
-
         Dataset<Document> documents = dataset.as(Encoders.bean(Document.class));
         return documents;
     }
