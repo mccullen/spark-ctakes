@@ -97,7 +97,6 @@ public class Runner {
         Broadcast<ConfigurationSettings> broadcastConfig = _documentLoader.getJavaSparkContext().broadcast(_config);
 
         Dataset<Document> documentDataset = _documentLoader.getDocuments();
-
         // Start up a pipeline for each partition of documents
         documentDataset.foreachPartition(documents -> {
             System.setProperty(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
