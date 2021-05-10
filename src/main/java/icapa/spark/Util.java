@@ -2,21 +2,11 @@ package icapa.spark;
 
 import icapa.spark.models.ConfigurationSettings;
 import icapa.spark.models.Document;
-import org.apache.ctakes.core.pipeline.PipelineBuilder;
-import org.apache.ctakes.core.pipeline.PiperFileReader;
-import org.apache.ctakes.dictionary.lookup2.util.UmlsUserApprover;
 import org.apache.log4j.Logger;
-import org.apache.uima.analysis_engine.AnalysisEngine;
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.fit.factory.AnalysisEngineFactory;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.util.XMLSerializer;
 
-import java.io.*;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
