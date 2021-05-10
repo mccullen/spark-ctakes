@@ -27,7 +27,7 @@ import java.util.Arrays;
 
 public class SparkMain {
     public static void main(String[] args) {
-        ConfigurationSettings config = Util.getConfigurationSettings();
+        ConfigurationSettings config = Util.getConfigurationSettings(args[0]);
         SparkConf sparkConf = new SparkConf();
         sparkConf
             .registerKryoClasses(new Class<?>[]{

@@ -14,13 +14,17 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.JCasPool;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Playground {
     public static void main(String[] args) throws Exception {
-        String s = "hello there world";
-        String[] result = s.split("\u0001");
-        System.out.println(result);
+        File f = new File("test.props");
+        if (f.exists()) {
+            System.out.println("exists");
+        } else {
+            System.out.println("Does not exist");
+        }
     }
 }

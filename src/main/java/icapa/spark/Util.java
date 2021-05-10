@@ -13,9 +13,8 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.XMLSerializer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -52,18 +51,22 @@ public class Util {
         return piperFileReader;
     }
 
-    public static ConfigurationSettings getConfigurationSettings() {
+    public static ConfigurationSettings getConfigurationSettings(String path) {
         ConfigurationSettings configurationSettings = new ConfigurationSettings();
-        try (InputStream input = Util.class.getClassLoader().getResourceAsStream(Const.CONFIG_FILE)) {
-            Properties props = new Properties();
-            props.load(input);
-            configurationSettings.setUmlsKey(props.getProperty("umls.key"));
-            configurationSettings.setPiperFile(props.getProperty("piper.file"));
-            configurationSettings.setDocumentLoader(props.getProperty("document.loader"));
-            configurationSettings.setMaster(props.getProperty("master"));
-            configurationSettings.setLookupXml(props.getProperty("lookup.xml"));
-        } catch (IOException ex) {
-            LOGGER.error("Error loading configuration settings", ex);
+        File file = new File(path);
+        if (file.isFile()) {
+            try {
+                InputStream input = new FileInputStream(file);
+                Properties props = new Properties();
+                props.load(input);
+                configurationSettings.setUmlsKey(props.getProperty("umls.key"));
+                configurationSettings.setPiperFile(props.getProperty("piper.file"));
+                configurationSettings.setDocumentLoader(props.getProperty("document.loader"));
+                configurationSettings.setMaster(props.getProperty("master"));
+                configurationSettings.setLookupXml(props.getProperty("lookup.xml"));
+            } catch (Exception e) {
+                LOGGER.error("Error loading configuration settings from " + path, e);
+            }
         }
         return configurationSettings;
     }
@@ -90,5 +93,23 @@ public class Util {
             texts.add(doc);
         }
         return texts;
+    }
+
+    public static String getJarPath() {
+        String jarPath = "";
+        try {
+            jarPath = new File(Util.class.getProtectionDomain().getCodeSource().getLocation()
+                .toURI()).getPath();
+        } catch (URISyntaxException e) {
+            LOGGER.error("Error getting path to jar", e);
+        }
+        return jarPath;
+    }
+
+    public static String getJarDir() {
+        String jarPath = Util.getJarPath();
+        Path path = Paths.get(jarPath);
+        String jarDir = path.getParent().toString();
+        return jarDir;
     }
 }
