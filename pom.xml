@@ -45,34 +45,6 @@ the License.
                     <target>8</target>
                 </configuration>
             </plugin>
-            <!-- Creates jar file and DOES include dependencies -->
-            <!-- Prefabricated descriptor. jar w/ dependencies will package all dependencies together -->
-            <!--
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-assembly-plugin</artifactId>
-              <version>2.5.4</version>
-              <configuration>
-                <descriptorRefs>
-                  <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-                <archive>
-                  <manifest>
-                    <mainClass>icapa.spark.SparkMain</mainClass>
-                  </manifest>
-                </archive>
-              </configuration>
-              <executions>
-                <execution>
-                  <id>make-assembly</id>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>single</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -175,7 +147,6 @@ the License.
             <groupId>org.apache.ctakes</groupId>
             <artifactId>ctakes-core</artifactId>
             <version>${ctakes.version}</version>
-            <!-- Exclude from jar-with-dependencies because it is already in CTAKES_HOME/lib -->
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
@@ -198,9 +169,6 @@ the License.
             <groupId>org.apache.ctakes</groupId>
             <artifactId>ctakes-coreference</artifactId>
             <version>${ctakes.version}</version>
-            <!-- Exclude dependency from jar-with-dependencies since CTAKES_HOME/lib already has this -->
-            <!-- TODO: I commented this out since it stopped working when running from intellij. Not sure why exactly -->
-            <!--<scope>provided</scope>-->
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
