@@ -47,8 +47,6 @@ public class Runner {
         }
     }
     private void setDocumentLoader() {
-        SparkSession sparkSession = getSparkSession();
-        JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
         String documentLoaderLine = _config.getDocumentLoader();
 
         // The first space separates the class name from the parameters
@@ -66,30 +64,7 @@ public class Runner {
         } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException e) {
             LOGGER.error("Error instantiating document loader", e);
         }
-        _documentLoader.init(sparkSession, javaSparkContext);
-    }
-
-    private SparkSession getSparkSession() {
-        SparkConf sparkConf = new SparkConf();
-        sparkConf
-            .registerKryoClasses(new Class<?>[]{
-                Document.class,
-                ConfigurationSettings.class
-            });
-        SparkSession.Builder builder = SparkSession.builder();
-        if (_config.getMaster() != null) {
-            // If master is provided (like in dev environment), use it. Otherwise, it should be supplied
-            // in spark-submit
-            builder.master(_config.getMaster());
-        }
-        SparkSession sparkSession = builder
-            .config(sparkConf)
-            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-            // Use this if you need to register all Kryo required classes.
-            // If it is false, you do not need register any class for Kryo, but it will increase your data size when the data is serializing.
-            .config("spark.kryo.registrationRequired", "true")
-            .getOrCreate();
-        return sparkSession;
+        _documentLoader.init(_config);
     }
 
     public void start() {
