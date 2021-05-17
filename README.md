@@ -63,4 +63,4 @@ $ ./bin/spark-submit \
   target/spark-ctakes-0.1.jar \
   config.properties
 ```
-spark-submit --class icapa.spark.SparkMain --conf spark.jars=C:\root\vdt\icapa\nlp\apache-ctakes-4.0.0.1\lib2\mssql-jdbc-9.2.1.jre8.jar .\spark-ctakes-0.1.jar config.properties
+spark-submit --class icapa.spark.SparkMain --conf spark.jars=C:\root\vdt\icapa\nlp\apache-ctakes-4.0.0.1\lib2\mssql-jdbc-9.2.1.jre8.jar .\spark-ctakes-0.1.jar test-config.properties

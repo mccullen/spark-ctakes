@@ -6,6 +6,8 @@ import icapa.spark.models.Document;
 import org.apache.ctakes.core.config.ConfigParameterConstants;
 import org.apache.ctakes.core.pipeline.PipelineBuilder;
 import org.apache.ctakes.core.pipeline.PiperFileReader;
+import org.apache.ctakes.core.resource.FileLocator;
+import org.apache.ctakes.dictionary.lookup2.util.JdbcConnectionFactory;
 import org.apache.ctakes.dictionary.lookup2.util.UmlsUserApprover;
 import org.apache.ctakes.typesystem.type.structured.DocumentID;
 import org.apache.log4j.Logger;
@@ -14,14 +16,21 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
+import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 
+import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Timer;
 
 public class Runner {
     private static final Logger LOGGER = Logger.getLogger(Runner.class.getName());
@@ -67,7 +76,50 @@ public class Runner {
         _documentLoader.init(_config);
     }
 
+    private String getConnectionUrl(String jdbcUrl) {
+        String urlDbPath = jdbcUrl.substring("jdbc:hsqldb:file:".length());
+        String urlFilePath = urlDbPath + ".script";
+
+        try {
+            String fullPath = FileLocator.getFullPath(urlFilePath);
+            return fullPath.substring(0, fullPath.length() - ".script".length());
+        } catch (FileNotFoundException var4) {
+            LOGGER.error("File not found", var4);
+        }
+        return "";
+    }
+
     public void start() {
+        String jdbcUrl = "jdbc:hsqldb:file:resources/org/apache/ctakes/dictionary/lookup/fast/icd/icd";
+        String jdbcDriver = "org.hsqldb.jdbcDriver";
+        String jdbcUser = "sa";
+        String jdbcPass = "";
+
+        String trueJdbcUrl = jdbcUrl;
+        if (jdbcUrl.startsWith("jdbc:hsqldb:file:")) {
+            trueJdbcUrl = "jdbc:hsqldb:file:" + getConnectionUrl(jdbcUrl);
+        }
+        LOGGER.info("trueJdbcUrl: " + trueJdbcUrl);
+
+        try {
+            Driver driver = (Driver)Class.forName(jdbcDriver).newInstance();
+            DriverManager.registerDriver(driver);
+        } catch (SQLException var10) {
+            LOGGER.error("Could not register Driver " + jdbcDriver, var10);
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException var11) {
+            LOGGER.error("Could not create Driver " + jdbcDriver, var11);
+        }
+
+        LOGGER.info("Connecting to " + jdbcUrl + ":");
+        Connection connection = null;
+
+        try {
+            connection = DriverManager.getConnection(trueJdbcUrl, jdbcUser, jdbcPass);
+        } catch (SQLException var9) {
+            LOGGER.error("  Could not create Connection with " + trueJdbcUrl + " as " + jdbcUser, var9);
+        }
+
+
         // Use broadcast so kryo serialization is used in the closure
         Broadcast<ConfigurationSettings> broadcastConfig = _documentLoader.getJavaSparkContext().broadcast(_config);
 
@@ -84,7 +136,8 @@ public class Runner {
             piperFileReader.loadPipelineFile(broadcastConfig.value().getPiperFile());
             pipelineBuilder.build();
             AnalysisEngineDescription analysisEngineDescription = pipelineBuilder.getAnalysisEngineDesc();
-            AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);
+            //AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);
+            AnalysisEngine analysisEngine = UIMAFramework.produceAnalysisEngine(analysisEngineDescription);
             while (documents.hasNext()) {
                 Document document = documents.next();
                 DocumentID documentID = new DocumentID(jCas);
