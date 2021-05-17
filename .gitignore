@@ -30,4 +30,4 @@ dist
 lib
 **/lib/*.jar
 ivy/ivy*.jar
-**/config.properties
+**/*config.properties
