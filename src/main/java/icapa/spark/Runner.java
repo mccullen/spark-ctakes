@@ -19,8 +19,11 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.analysis_engine.impl.AggregateAnalysisEngine_impl;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.pipeline.SimplePipeline;
+import org.apache.uima.impl.AnalysisEngineFactory_impl;
 import org.apache.uima.jcas.JCas;
 
 import java.io.FileNotFoundException;
@@ -76,50 +79,8 @@ public class Runner {
         _documentLoader.init(_config);
     }
 
-    private String getConnectionUrl(String jdbcUrl) {
-        String urlDbPath = jdbcUrl.substring("jdbc:hsqldb:file:".length());
-        String urlFilePath = urlDbPath + ".script";
-
-        try {
-            String fullPath = FileLocator.getFullPath(urlFilePath);
-            return fullPath.substring(0, fullPath.length() - ".script".length());
-        } catch (FileNotFoundException var4) {
-            LOGGER.error("File not found", var4);
-        }
-        return "";
-    }
 
     public void start() {
-        String jdbcUrl = "jdbc:hsqldb:file:resources/org/apache/ctakes/dictionary/lookup/fast/icd/icd";
-        String jdbcDriver = "org.hsqldb.jdbcDriver";
-        String jdbcUser = "sa";
-        String jdbcPass = "";
-
-        String trueJdbcUrl = jdbcUrl;
-        if (jdbcUrl.startsWith("jdbc:hsqldb:file:")) {
-            trueJdbcUrl = "jdbc:hsqldb:file:" + getConnectionUrl(jdbcUrl);
-        }
-        LOGGER.info("trueJdbcUrl: " + trueJdbcUrl);
-
-        try {
-            Driver driver = (Driver)Class.forName(jdbcDriver).newInstance();
-            DriverManager.registerDriver(driver);
-        } catch (SQLException var10) {
-            LOGGER.error("Could not register Driver " + jdbcDriver, var10);
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException var11) {
-            LOGGER.error("Could not create Driver " + jdbcDriver, var11);
-        }
-
-        LOGGER.info("Connecting to " + jdbcUrl + ":");
-        Connection connection = null;
-
-        try {
-            connection = DriverManager.getConnection(trueJdbcUrl, jdbcUser, jdbcPass);
-        } catch (SQLException var9) {
-            LOGGER.error("  Could not create Connection with " + trueJdbcUrl + " as " + jdbcUser, var9);
-        }
-
-
         // Use broadcast so kryo serialization is used in the closure
         Broadcast<ConfigurationSettings> broadcastConfig = _documentLoader.getJavaSparkContext().broadcast(_config);
 
@@ -130,6 +91,7 @@ public class Runner {
             JCas jCas = JCasFactory.createJCas();
             PiperFileReader piperFileReader = new PiperFileReader();
             PipelineBuilder pipelineBuilder = piperFileReader.getBuilder();
+
             // Order of methods is important here: set -> load -> build
             pipelineBuilder.set(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
             pipelineBuilder.set(ConfigParameterConstants.PARAM_LOOKUP_XML, broadcastConfig.value().getLookupXml());
@@ -138,6 +100,7 @@ public class Runner {
             AnalysisEngineDescription analysisEngineDescription = pipelineBuilder.getAnalysisEngineDesc();
             //AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);
             AnalysisEngine analysisEngine = UIMAFramework.produceAnalysisEngine(analysisEngineDescription);
+
             while (documents.hasNext()) {
                 Document document = documents.next();
                 DocumentID documentID = new DocumentID(jCas);

@@ -2,10 +2,14 @@ package icapa.spark.loaders;
 
 import icapa.spark.models.ConfigurationSettings;
 import icapa.spark.models.Document;
+import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
+
+import java.net.URL;
+import java.net.URLStreamHandler;
 
 public abstract class AbstractLoader {
     private SparkSession _sparkSession;
@@ -16,6 +20,24 @@ public abstract class AbstractLoader {
         _config = config;
         setSparkSession();
         _javaSparkContext = JavaSparkContext.fromSparkContext(_sparkSession.sparkContext());
+
+        // see https://stackoverflow.com/questions/52748677/in-spark-2-3-2-i-am-getting-java-lang-classcastexception-when-dataset-count-i
+        // In the UmlsUserApprover.authenticate, url.openConnection is cast to HttpUrlConnection. That is good, but
+        // spark has a different url stream handler so the cast will fail. Here, we are overriding that so the default
+        // gets used instead of the one provided by hadoop
+        URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory(_javaSparkContext.hadoopConfiguration()) {
+            @Override
+            public URLStreamHandler createURLStreamHandler(String protocol) {
+                URLStreamHandler handler;
+                if (protocol != null &&
+                        (protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("https"))) {
+                    handler = null; // default
+                } else {
+                    handler = super.createURLStreamHandler(protocol);
+                }
+                return handler;
+            }
+        });
     }
 
     private void setSparkSession() {
