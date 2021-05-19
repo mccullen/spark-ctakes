@@ -6,34 +6,19 @@ import icapa.spark.models.Document;
 import org.apache.ctakes.core.config.ConfigParameterConstants;
 import org.apache.ctakes.core.pipeline.PipelineBuilder;
 import org.apache.ctakes.core.pipeline.PiperFileReader;
-import org.apache.ctakes.core.resource.FileLocator;
-import org.apache.ctakes.dictionary.lookup2.util.JdbcConnectionFactory;
 import org.apache.ctakes.dictionary.lookup2.util.UmlsUserApprover;
 import org.apache.ctakes.typesystem.type.structured.DocumentID;
 import org.apache.log4j.Logger;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.SparkSession;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.analysis_engine.impl.AggregateAnalysisEngine_impl;
-import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.pipeline.SimplePipeline;
-import org.apache.uima.impl.AnalysisEngineFactory_impl;
 import org.apache.uima.jcas.JCas;
 
-import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Timer;
 
 public class Runner {
     private static final Logger LOGGER = Logger.getLogger(Runner.class.getName());
