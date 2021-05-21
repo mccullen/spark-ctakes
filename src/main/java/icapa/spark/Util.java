@@ -45,4 +45,12 @@ public class Util {
         }
         return texts;
     }
+
+    public static void timeFunction(Runnable function) {
+        long startTime = System.nanoTime();
+        function.run();
+        long endTime = System.nanoTime();
+        long durationInMilliseconds = (endTime - startTime)/1000000;
+        LOGGER.info("Execution time in miliseconds: " + durationInMilliseconds);
+    }
 }

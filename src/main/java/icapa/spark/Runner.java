@@ -66,6 +66,10 @@ public class Runner {
 
 
     public void start() {
+        Util.timeFunction(() -> startAux());
+    }
+
+    private void startAux() {
         // Use broadcast so kryo serialization is used in the closure
         Broadcast<ConfigurationSettings> broadcastConfig = _documentLoader.getJavaSparkContext().broadcast(_config);
 
