@@ -2,6 +2,30 @@
 This is a solution for scaling out cTAKES using Apache Spark. 
 
 ## Usage
+### Prerequisites
+Before you can submit your job over spark-submit, you will need to satisfy these prerequisites
+- All nodes must be able to access cTAKES
+- All nodes must set the CTAKES_HOME environment variable to point to cTAKES
+
+In our implementation over Amazon EMR, we stored cTAKES on Amazon EFS. If using a shared copy of cTAKES, you MUST
+edit your cTAKES dictionaries to allow multiple pipelines to access it in parallel. To do this, you need to 
+disable the lock file on the dictonary properties and make it readonly. For example, to do this to the sno_rx_16ab
+dictionary (the default used by cTAKES), go to
+```
+resources/org/apache/ctakes/dictionary/lookup/fast/sno_rx_16ab/sno_rx_16ab.properties
+```
+and add the readonly and hsqldb.lock_file properties so your file should look something like
+```properties
+#HSQL Database Engine 2.3.4
+#Tue Apr 04 21:01:14 EDT 2017
+version=2.3.4
+modified=no
+tx_timestamp=0
+readonly=true
+hsqldb.lock_file=false
+```
+
+### Configuration
 To use, you will need to specify some configuration properties in a config.properties file following the convention below
 ```properties
 piper.file=my-piper-file.piper
@@ -33,7 +57,67 @@ contain spaces.
 - **lookup.xml**: Path (relative to CTAKES_HOME) to the lookup xml file for the dictionary you want to use for your
 pipeline.
 
-### Create a Custom Document Loader
+### Execute on Spark
+Once you have your configuration ready, you can submit your spark job using spark-submit. Here is an example for
+our application:
+```
+./bin/spark-submit 
+  --master spark://207.184.161.138:7077
+  --class icapa.spark.SparkMain 
+  --conf spark.jars=/tmp/custom-components-1.0.jar 
+  --conf spark.executor.memory=16g 
+  --conf spark.driver.memory=16g 
+  ./spark-ctakes-0.1.jar config.properties
+```
+
+Here is an explanation of each argument and configuration setting:
+- **master**: The master url of your cluster
+- **class**: The entry point (should always be icapa.spark.SparkMain)
+- **spark.jars**: Conf setting to sepcify additional jars to add to the classpath of the driver and executor nodes.
+This is only necessary if you have some custom UIMA components or document loaders in another jar.
+- **spark.executor.memory**: The amount of memory to use for each executor process. We need to increase this from the
+default or else we will run into out of heap memory errors since cTAKES uses a lot of memory.
+- **spark.driver.memory**: The same as spark.executor.memory but for the driver node.
+- **spark-ctakes-0.1.jar config.properties**: The application jar with the main class (SparkMain) followed by the 
+path to your config.properties file (absolute or relative to your current working directory).
+
+See the [Spark Documentation](https://spark.apache.org/docs/1.1.0/submitting-applications.html) for more info
+on submitting spark applications. Also, see [Spark Configuration](https://spark.apache.org/docs/latest/configuration.html) 
+for a description of all the --conf configuration settings.
+
+That's it! 
+
+## Document Loaders
+Our spark-ctakes solution comes with a few document loaders. These are classes to read in documents. Think of this as the replacement for the 
+CR. We provide some of our own document loaders for you to use but you can create your own custom loader if necessary. 
+### icapa.spark.loaders.DataSourceLoader
+This document loader lets you read in documents from a variety of formats accepted by Spark SQL (jdbc, parquet, csv, json etc.).
+The configuration you would set in your config.properties file would look something like this:
+
+```properties
+document.loader=icapa.spark.loaders.DataSourceLoader format:csv\u0002options:sep\u0003,\u0003inferSchema\u0003true\u0003header\u0003true\u0002examples/src/main/resources/notes.csv
+```
+There is only one argument to DataSourceLoader and it is a configuration string for specifying the format, options, and load paths.
+Below is an explaination of each section of the configuration string:
+- format: The Spark SQL compatible format (jdbc, csv, json, etc.)
+- options: The options to set for configuring the data frame reader (delimited by \u0003 for multiple options). If not provided,
+no options will be set.
+- loads: The load paths to set for configuring the data frame reader (delimited by \u0003 for multiple paths). If not provided, no load paths
+will be set and it will use load() without specifying any paths (useful in jdbc, for example, where there is no path and the DB connection
+settings are configured by the options).
+
+Note that, when the dataset is loaded in, it will be cast to the Document class, which as a documentId and text property. Thus,
+you must ensure that your column names conform to this standard or the cast will fail.
+
+Here is an example of how you may connect using the jdbc format. Note that there is no loads specified since we are connecting to the DB rather
+than loading in a file. Also note that we rename our columns in our query as documentId and text in order to conform to the Document class
+properties.
+
+```properties
+document.loader=icapa.spark.loaders.DataSourceLoader format:jdbc\u0002options:url\u0003jdbc:sqlserver://localhost;integratedSecurity=true;\u0003driver\u0003com.microsoft.sqlserver.jdbc.SQLServerDriver\u0003query\u0003SELECT TOP 10 note_id AS documentId, note AS text FROM playground.dbo.note
+```
+
+## Create a Custom Document Loader
 To create a custom document loader, you need to extend icapa.spark.AbstractLoader and implement getDocuments().
 
 It is easiest to learn with an example, so let's go over creating icapa.spark.LineLoader. This loader is pretty simple.
@@ -123,27 +207,17 @@ Check the comments and code for details. Here are the key takeaways:
 - You MUST extend AbstractLoader
 - You MUST override getDocuments, which returns your Dataset of Documents 
 
-### Execute on Spark
-The [Spark Documentation](https://spark.apache.org/docs/1.1.0/submitting-applications.html) 
-provides excellent context on how to submit your jobs. A bare bones example is provided below:
- * Typical syntax using spark-submit
+You will now be able to set this as your document loader in your config.properties file:
+```properties
+document.loader=icapa.spark.loaders.LineLoader path/to/notes.txt\u0001100
 ```
-./bin/spark-submit \
-  --class <main-class>
-  --master <master-url> \
-  --deploy-mode <deploy-mode> \
-  --conf <key>=<value> \
-  ... # other options
-  <application-jar> \
-  [application-arguments]
+Alternatively, if you want to just use the default starting document id instead of 100:
+```properties
+document.loader=icapa.spark.loaders.LineLoader path/to/notes.txt
 ```
-Now an example for our application
+
+Then, when you do spark-submit, just make sure that you include the path to the jar containing this class in the 
+spark.jars configuration setting:
 ```
-$ ./bin/spark-submit \
-  --class CtakesSparkMain \
-  --master spark://207.184.161.138:7077 \
-  --executor-memory 20G \
-  --total-executor-cores 100 \
-  target/spark-ctakes-0.1.jar \
-  config.properties
+--conf spark.jars=/path/to/jar/with/line-loader.jar 
 ```
