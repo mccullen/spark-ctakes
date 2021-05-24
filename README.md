@@ -5,6 +5,7 @@ This is a solution for scaling out cTAKES using Apache Spark.
 ### Prerequisites
 Before you can submit your job over spark-submit, you will need to satisfy these prerequisites
 - Download the latest release jar [here](https://github.com/mccullen/spark-ctakes/releases)
+- Our solution was tested on spark 3.1.1, scala 2.12.10, and hadoop 2.7. 
 - All nodes must be able to access cTAKES
 - All nodes must set the CTAKES_HOME environment variable to point to cTAKES
 
