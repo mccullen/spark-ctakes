@@ -31,3 +31,4 @@ lib
 **/lib/*.jar
 ivy/ivy*.jar
 **/*config.properties
+**/private/*
