@@ -30,6 +30,8 @@ public class Util {
             } catch (Exception e) {
                 LOGGER.error("Error loading configuration settings from " + path, e);
             }
+        } else {
+            LOGGER.error("Failed to find file: " + path);
         }
         return configurationSettings;
     }

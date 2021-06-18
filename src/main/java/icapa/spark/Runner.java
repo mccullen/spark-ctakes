@@ -45,12 +45,15 @@ public class Runner {
     }
     private void setDocumentLoader() {
         String documentLoaderLine = _config.getDocumentLoader();
+        LOGGER.info("Setting document loader: " + documentLoaderLine);
 
         // The first space separates the class name from the parameters
         String[] splitLine = documentLoaderLine.split(" ", 2);
         String documentLoaderName = splitLine[0];
+        LOGGER.info("Document loader name: " + documentLoaderName);
         // The parameters are separated by SOH
         String[] params = splitLine[1].split("\u0001");
+        LOGGER.info("Document loader params: " + documentLoaderName);
 
         // Create an array of String classes. The loader can only accept ctors with String parameters
         Class[] classes = new Class[params.length];
