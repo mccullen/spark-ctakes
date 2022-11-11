@@ -77,8 +77,11 @@ public class Runner {
         Broadcast<ConfigurationSettings> broadcastConfig = _documentLoader.getJavaSparkContext().broadcast(_config);
 
         Dataset<Document> documentDataset = _documentLoader.getDocuments();
+        int nPartitions = documentDataset.rdd().getNumPartitions();
+        LOGGER.info("N partitions: " + nPartitions);
         // Start up a pipeline for each partition of documents
         documentDataset.foreachPartition(documents -> {
+            LOGGER.info("Working on partition...");
             System.setProperty(UmlsUserApprover.KEY_PARAM, broadcastConfig.value().getUmlsKey());
             JCas jCas = JCasFactory.createJCas();
             PiperFileReader piperFileReader = new PiperFileReader();
@@ -93,6 +96,7 @@ public class Runner {
             //AnalysisEngine analysisEngine = AnalysisEngineFactory.createEngine(analysisEngineDescription);
             AnalysisEngine analysisEngine = UIMAFramework.produceAnalysisEngine(analysisEngineDescription);
 
+            int i = 0;
             while (documents.hasNext()) {
                 Document document = documents.next();
                 DocumentID documentID = new DocumentID(jCas);
@@ -101,7 +105,10 @@ public class Runner {
                 jCas.setDocumentText(document.getText());
                 analysisEngine.process(jCas);
                 jCas.reset();
+                LOGGER.info("Processing document " + i + "w/ id " + documentID.getDocumentID());
+                ++i;
             }
+            analysisEngine.destroy();
         });
         _documentLoader.getSparkSession().stop();
     }

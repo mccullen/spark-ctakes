@@ -27,7 +27,7 @@ the License.
     </description>
     <properties>
         <ctakes.version>4.0.0.1</ctakes.version>
-        <spark.version>3.1.1</spark.version>
+        <spark.version>3.1.2</spark.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -56,6 +56,11 @@ the License.
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.apache.ctakes:*</exclude>
+                                </excludes>
+                            </artifactSet>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -161,6 +166,7 @@ the License.
                     <artifactId>guava</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.ctakes</groupId>
@@ -172,6 +178,7 @@ the License.
                     <artifactId>guava</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.ctakes</groupId>
@@ -183,6 +190,7 @@ the License.
                     <artifactId>guava</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
