@@ -69,6 +69,8 @@ our application:
   --conf spark.jars=/tmp/custom-components-1.0.jar 
   --conf spark.executor.memory=16g 
   --conf spark.driver.memory=16g 
+  --conf "spark.yarn.appMasterEnv.CTAKES_HOME=/efs/apache-ctakes-4.0.0.1" \
+  --conf "spark.executorEnv.CTAKES_HOME=/efs/apache-ctakes-4.0.0.1" \
   ./spark-ctakes-0.1.jar config.properties
 ```
 
@@ -82,6 +84,10 @@ default or else we will run into out of heap memory errors since cTAKES uses a l
 - **spark.driver.memory**: The same as spark.executor.memory but for the driver node.
 - **spark-ctakes-0.1.jar config.properties**: The application jar with the main class (SparkMain) followed by the 
 path to your config.properties file (absolute or relative to your current working directory).
+- **spark.yarn.appMasterEnv.CTAKES_HOME**: The path to CTAKES_HOME on the master node. This is used by the ctakes
+file locator to find various resources (dictionaries, model files, etc.)
+- **spark.yarn.executorEnv.CTAKES_HOME**: The path to CTAKES_HOME on the executor nodes. This is used by the ctakes
+file locator to find various resources (dictionaries, model files, etc.)
 
 See the [Spark Documentation](https://spark.apache.org/docs/1.1.0/submitting-applications.html) for more info
 on submitting spark applications. Also, see [Spark Configuration](https://spark.apache.org/docs/latest/configuration.html) 
