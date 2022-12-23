@@ -212,8 +212,8 @@ public class LineLoader extends AbstractLoader { // NOTE: We are extending Abstr
 ```
 
 Check the comments and code for details. Here are the key takeaways:
-- You MUST extend AbstractLoader
-- You MUST override getDocuments, which returns your Dataset of Documents 
+- You **MUST** extend AbstractLoader
+- You **MUST** override getDocuments, which returns your Dataset of Documents 
 
 You will now be able to set this as your document loader in your config.properties file:
 ```properties

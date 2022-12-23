@@ -105,7 +105,7 @@ public class Runner {
                 jCas.setDocumentText(document.getText());
                 analysisEngine.process(jCas);
                 jCas.reset();
-                LOGGER.info("Processing document " + i + "w/ id " + documentID.getDocumentID());
+                LOGGER.info("Processing document " + i + " w/ id " + document.getDocumentId());
                 ++i;
             }
             analysisEngine.destroy();
